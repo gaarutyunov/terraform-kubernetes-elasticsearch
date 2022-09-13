@@ -3,11 +3,11 @@ terraform {
   required_providers {
     datadog = {
       source  = "DataDog/datadog"
-      version = "~> 2.19.1"
+      version = ">=3.5.11"
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 1.3.2"
+      version = ">=2.6.0"
     }
   }
 }
