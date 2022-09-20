@@ -1,6 +1,6 @@
 # terraform-kubernetes-elasticsearch
 
-Elasticsearch module for Kubernetes based on [[Elasticsearch Helm charts](https://github.com/elastic/helm-charts/tree/master/elasticsearch). Latest changes from Helm charts are from ([521eb282b72491ea52f430145c2d718375d735ef](https://github.com/elastic/helm-charts/commit/521eb282b72491ea52f430145c2d718375d735ef#diff-18897dcfce6a4e7ae63a3baeed443c48).
+Elasticsearch module for Kubernetes based on [[Elasticsearch Helm charts](https://github.com/elastic/helm-charts/tree/master/elasticsearch)
 
 ## Usage
 
