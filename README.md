@@ -7,71 +7,36 @@ Elasticsearch module for Kubernetes based on [[Elasticsearch Helm charts](https:
 ```hcl-terraform
 locals {
   cluster_name          = "elasticsearch-cluster"
-  es_version            = "6.8.8"
+  es_version            = "7.17.3"
   master_eligible_nodes = 1
-}
-
-resource "kubernetes_storage_class" "es_ssd" {
-  metadata {
-    name = "es-ssd"
-  }
-  storage_provisioner = "kubernetes.io/gce-pd"
-  parameters          = {
-    type = "pd-ssd"
-  }
+  namespace             = "elk"
 }
 
 module "elasticsearch_client" {
-  source                = "kiwicom/elasticsearch/kubernetes"
-  version               = "~> 1.0.0"
-  gcp_project_id        = "gcp-project-id"
-  # version >= 1.0.0 and < 1.1.0, e.g. 1.0.X
-  cluster_name          = local.cluster_name
+  source                = "./modules/terraform-kubernetes-elasticsearch"
   node_group            = "client"
+  cluster_name          = local.cluster_name
   es_version            = local.es_version
-  namespace             = "storage"
-  replicas              = 1
+  namespace             = local.namespace
   master_eligible_nodes = local.master_eligible_nodes
-
-  common_annotations = {
-    "janitor/ttl": "10000d",
-  }
 }
 
 module "elasticsearch_master" {
-  source                = "kiwicom/elasticsearch/kubernetes"
-  version               = "~> 1.0.0"
-  # version >= 1.0.0 and < 1.1.0, e.g. 1.0.X
+  source                = "./modules/terraform-kubernetes-elasticsearch"
   node_group            = "master"
   cluster_name          = local.cluster_name
   es_version            = local.es_version
-  namespace             = "storage"
-  replicas              = 1
+  namespace             = local.namespace
   master_eligible_nodes = local.master_eligible_nodes
-  storage_class_name    = kubernetes_storage_class.es_ssd.metadata[0].name
-  storage_size          = "5Gi"
-
-  common_annotations = {
-    "janitor/ttl" = "10000d",
-  }
 }
 
 module "elasticsearch_data" {
-  source                = "kiwicom/elasticsearch/kubernetes"
-  version               = "~> 1.0.0"
-  # version >= 1.0.0 and < 1.1.0, e.g. 1.0.X
+  source                = "./modules/terraform-kubernetes-elasticsearch"
   node_group            = "data"
   cluster_name          = local.cluster_name
   es_version            = local.es_version
-  namespace             = "storage"
-  replicas              = 2
+  namespace             = local.namespace
   master_eligible_nodes = local.master_eligible_nodes
-  storage_class_name    = kubernetes_storage_class.es_ssd.metadata[0].name
-  storage_size          = "40Gi"
-
-  common_annotations = {
-    "janitor/ttl" = "10000d",
-  }
 }
 
 output "elasticsearch_endpoint" {
