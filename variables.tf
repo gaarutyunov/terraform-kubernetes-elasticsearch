@@ -1,8 +1,3 @@
-variable "gcp_project_id" {
-  type        = string
-  description = "GCP project ID"
-}
-
 variable "helm_install_timeout" {
   type        = number
   default     = 600
@@ -13,6 +8,11 @@ variable "cluster_name" {
   type        = string
   default     = "elasticsearch-cluster"
   description = "Elasticsearch cluster name and release name"
+}
+
+variable "anti_affinity" {
+  type        = string
+  default     = "soft"
 }
 
 variable "node_suffix" {
@@ -89,7 +89,7 @@ variable "namespace" {
 
 variable "replicas" {
   type        = number
-  default     = 0
+  default     = 1
   description = "Kubernetes replica count for the statefulset (i.e. how many pods)"
 }
 
@@ -118,19 +118,19 @@ variable "termination_grace_period" {
 
 variable "es_java_opts" {
   type        = string
-  default     = "-Xmx1g -Xms1g"
+  default     = "-Xmx128m -Xms128m"
   description = "Java options for Elasticsearch. This is where you should configure the jvm heap size. Can be around half of requests memory."
 }
 
 variable "storage_class_name" {
   type        = string
-  default     = "ssd"
+  default     = "hostpath"
   description = "Storage class name"
 }
 
 variable "storage_size" {
   type        = string
-  default     = "1Gi"
+  default     = "512M"
   description = "Storage size of the storageClassName"
 }
 
@@ -148,12 +148,12 @@ variable "resources" {
 
   default = {
     requests = {
-      cpu    = "400m"
-      memory = "3Gi"
+      cpu    = "100m"
+      memory = "512M"
     }
     limits = {
       cpu    = "1000m"
-      memory = "3Gi"
+      memory = "512M"
     }
   }
 
@@ -283,65 +283,4 @@ locals {
     "ingest" = coalesce(var.roles["ingest"], local.default_roles[var.node_group]["ingest"])
   }
   persistance_enabled = var.node_group != "client" ? true : false
-  pod_annotations = merge({
-    "ad\\.datadoghq\\.com/elasticsearch\\.check_names" : "[\"elastic\"]",
-    "ad\\.datadoghq\\.com/elasticsearch\\.init_configs" : "[{}]",
-    "ad\\.datadoghq\\.com/elasticsearch\\.instances" : "[{\"url\": \"http://%%host%%:9200\"\\, \"cluster_stats\": \"true\"\\, \"index_stats\": \"true\"\\, \"pending_task_stats\": \"true\"}]",
-    "ad\\.datadoghq\\.com/elasticsearch\\.tags" : " {\"gcp_project_id\": \"${var.gcp_project_id}\"\\, \"es_cluster_name\": \"${var.cluster_name}\"} ",
-  }, var.pod_annotations)
-}
-
-/// Monitoring variables
-variable "es_monitoring" {
-  type        = bool
-  default     = false
-  description = "Enables infrastructure-level monitoring for your ES cluster - default value is false"
-}
-
-variable "monitoring_slack_alerts_channel" {
-  type        = string
-  default     = "@slack-alerts"
-  description = "Slack #alerts channel for reporting alerts about the underlying infrastructure."
-}
-
-variable "monitoring_pager_duty_platform_infra" {
-  type        = string
-  default     = "@pagerduty-DDDevops"
-  description = "Platform Infra 1st line PagerDuty."
-}
-
-variable "monitoring_pager_duty_working_hours" {
-  type        = string
-  default     = "@pagerduty-DDDevopsLow"
-  description = "Platform PagerDuty escalation policy with core time response only."
-}
-
-variable "es_health_monitoring" {
-  type        = bool
-  default     = false
-  description = "Enable monitoring of ES cluster health, with notifications sent to monitoring_slack_additional_channel and monitoring_pager_duty_team_specific"
-}
-
-variable "notify_infra_about_health" {
-  type        = bool
-  default     = false
-  description = "Send notification about ES cluster health to infra platform's channels and PD too"
-}
-
-variable "monitoring_slack_additional_channel" {
-  type        = string
-  default     = ""
-  description = "Optional additional slack channel to report warnings to. If PagerDuty is not specified, alerts will be sent to it too. You can get integration slack channel name from DataDog UI/Integrations/Integrations/Slack/Configure."
-}
-
-variable "monitoring_pager_duty_team_specific" {
-  type        = string
-  default     = ""
-  description = "Team specific PagerDuty escalation plicy."
-}
-
-variable "create_snapshot_bucket" {
-  type        = bool
-  default     = false
-  description = "Create a GCS bucket for storing snapshots"
 }
